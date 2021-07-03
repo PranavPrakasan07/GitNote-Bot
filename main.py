@@ -1,15 +1,11 @@
 import os
 import discord
-import requests
-import json
 from keep_alive import keep_alive
 from replit import db
 
 my_secret = os.environ['TOKEN']
 
 client = discord.Client()
-
-
 
 @client.event
 async def on_ready():
