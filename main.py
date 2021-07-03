@@ -18,16 +18,17 @@ async def on_message(message):
 
   if((str(message.author) == 'GitHub#0000')):
 
-    s = ""
+    s = ss = ""
 
     for i in range(len(message.embeds)):
       s += str(message.embeds[i].title)
+      ss += str(message.embeds[i].content)
 
-    await message.delete()
+    # await message.delete()
 
 # await message.channel.send("Message :" + f"{message.author.mention}" + str((message.embeds)) + "Message : " + s) 
 
-    await message.channel.send("Message : " + s) 
+    await message.channel.send("Message : " + s + ss) 
 
   if message.content.startswith('&hello'):            
     await message.channel.send('Hello!' +  f"{message.author.mention}")
@@ -43,6 +44,10 @@ async def on_message(message):
     await message.channel.send(embed=embed)
 
     # await message.channel.send("\n**Commands**\n\n>>> {}".format(help_message))
+
+  if message.content.startswith('&check'):            
+    await message.channel.send('Hello!')
+
 
 
 keep_alive()
