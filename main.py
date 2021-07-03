@@ -22,7 +22,7 @@ async def on_message(message):
 
     for i in range(len(message.embeds)):
       s += str(message.embeds[i].title)
-      ss += str(message.embeds[i].content)
+      ss += str(message.embeds[i].description)
 
     # await message.delete()
 
