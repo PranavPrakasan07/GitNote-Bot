@@ -8,6 +8,8 @@ my_secret = os.environ['TOKEN']
 
 client = discord.Client()
 
+commands = ['help', 'open', 'create', 'list', 'hello', 'view']
+
 @client.event
 async def on_ready():
   print('We have logged in as {0.user}'.format(client))
@@ -30,7 +32,7 @@ async def on_message(message):
     else:
       await message.channel.send("Your repository has **already** been added! Check out other commands to get updates regarding project status!")
 
-  if message.content.startswith('&list_repo'):
+  if message.content.startswith('&list'):
     keys = db.keys()
 
     list_of_repos = ''
@@ -42,6 +44,28 @@ async def on_message(message):
         list_of_repos += key + '\n\n'
       
       await message.channel.send("\n\n**Repositories**" + "\n >>> " + list_of_repos)
+
+  if message.content.startswith('&view'):
+    keys = db.keys()
+
+    repo_name = message.content[6:]
+
+    d = dict()
+
+    if repo_name not in list(db.keys()):
+      await message.channel.send("Not found!")
+    else:        
+      d = db[repo_name]
+
+      keys = d.keys()
+      values = d.values()
+
+      details = ''
+
+      for i in range(len(keys)):
+        details += keys[i] + " : " + values[i] + "\n\n"
+      
+      await message.channel.send("\n\n**" + repo_name + "**\n >>> " + details)
 
 
   if((str(message.author) == 'GitHub#0000')):
@@ -73,13 +97,19 @@ async def on_message(message):
 
       await message.channel.send("Title : " + title + "\n\nDescription : "+ desc) 
 
+  if message.content.startswith('&'): 
+    keyword = message.content.partition(' ')[0]
+
+    if(keyword[1:] not in commands):
+      await message.channel.send(keyword + ' is not a valid command! Check &help, to view commands')
+
   if message.content.startswith('&hello'):            
     await message.channel.send('Hello!' +  f"{message.author.mention}")
 
   if message.content.startswith('&help'):      
     await message.delete()
 
-    help_message = "\n&hello\n - Hello\n```&hello```\n\n" + "&help\n - Check commands\n```&help```\n\n"
+    help_message = "\n&hello\n - Hello\n```&hello```\n\n" + "&help\n - Check commands\n```&help```\n\n"  + "&create\n - Add repository to the list\n```&create <repo-name>```\n\n"  + "&list\n - To list all added repositories\n```&list```\n\n"
 
     embed=discord.Embed(title="\n**Commands**\n\n",  description=help_message, color=0xFF5733)
     embed.set_author(name = "GitNote", icon_url = "https://firebasestorage.googleapis.com/v0/b/eye-testing-interface.appspot.com/o/icon.png?alt=media&token=39e1ac07-af1c-4d94-914a-031a6489efc0")
