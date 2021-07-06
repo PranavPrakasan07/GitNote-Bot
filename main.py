@@ -8,7 +8,7 @@ my_secret = os.environ['TOKEN']
 
 client = discord.Client()
 
-commands = ['help', 'open', 'create', 'list', 'hello', 'view']
+commands = ['help', 'open', 'create', 'list', 'hello', 'view', 'see', 'delete']
 
 @client.event
 async def on_ready():
@@ -25,7 +25,9 @@ async def on_message(message):
     if(repo_name not in list(db.keys())):
       now = datetime.datetime.now()
       cdate = now.strftime("%Y-%m-%d %H:%M:%S")
-      db[repo_name] = dict({ cdate : ['created']})
+
+      d =  { cdate : ['Created']}
+      db[repo_name] = d
 
       await message.channel.send("Your repository has been successfully added! Check out other commands to get updates regarding project status!")
 
@@ -33,7 +35,7 @@ async def on_message(message):
       await message.channel.send("Your repository has **already** been added! Check out other commands to get updates regarding project status!")
 
   if message.content.startswith('&list'):
-    keys = db.keys()
+    keys = list(db.keys())
 
     list_of_repos = ''
 
@@ -46,24 +48,28 @@ async def on_message(message):
       await message.channel.send("\n\n**Repositories**" + "\n >>> " + list_of_repos)
 
   if message.content.startswith('&view'):
-    keys = db.keys()
+    keys = list(db.keys())
 
     repo_name = message.content[6:]
-
-    d = dict()
 
     if repo_name not in list(db.keys()):
       await message.channel.send("Not found!")
     else:        
       d = db[repo_name]
+      # d - {date_time string : [title, description]}
 
       keys = d.keys()
-      values = d.values()
+      # values = d.values()
 
       details = ''
 
-      for i in range(len(keys)):
-        details += keys[i] + " : " + values[i] + "\n\n"
+      for date_time in keys:
+        details += str(date_time) + " : " 
+        
+        for mess in d[date_time]:
+          details += str(mess) + '\n'
+
+        details += "\n\n"
       
       await message.channel.send("\n\n**" + repo_name + "**\n >>> " + details)
 
@@ -76,7 +82,8 @@ async def on_message(message):
       title = str(message.embeds[i].title)
       desc = str(message.embeds[i].description)
 
-      content_list = [title]
+      content_list = []
+      content_list.append(title)
 
       if(desc != "Embed.Empty"):
         content_list.append(desc)
@@ -84,14 +91,17 @@ async def on_message(message):
       now = datetime.datetime.now()
       cdate = now.strftime("%Y-%m-%d %H:%M:%S")
 
-      details = dict({cdate : content_list})
-      keys = db.keys()
+      details_old = dict()
+
+      keys = list(db.keys())
 
       if(len(keys) > 0):
 
         for key in keys:
           if(key in title):
-            db[key] = details
+            details_old = db[key]
+            details_old[cdate] = content_list
+            db[key] = details_old
 
     # await message.delete()
 
@@ -109,7 +119,7 @@ async def on_message(message):
   if message.content.startswith('&help'):      
     await message.delete()
 
-    help_message = "\n&hello\n - Hello\n```&hello```\n\n" + "&help\n - Check commands\n```&help```\n\n"  + "&create\n - Add repository to the list\n```&create <repo-name>```\n\n"  + "&list\n - To list all added repositories\n```&list```\n\n"
+    help_message = "\n&hello\n - Hello\n```&hello```\n\n" + "&help\n - Check commands\n```&help```\n\n"  + "&create\n - Add repository to the list\n```&create <repo-name>```\n\n"  + "&list\n - To list all added repositories\n```&list```\n\n"  + "&view\n - To view the proceedings of the project\n```&view <repo-name>```\n\n"
 
     embed=discord.Embed(title="\n**Commands**\n\n",  description=help_message, color=0xFF5733)
     embed.set_author(name = "GitNote", icon_url = "https://firebasestorage.googleapis.com/v0/b/eye-testing-interface.appspot.com/o/icon.png?alt=media&token=39e1ac07-af1c-4d94-914a-031a6489efc0")
@@ -117,6 +127,18 @@ async def on_message(message):
     await message.channel.send(embed=embed)
 
     # await message.channel.send("\n**Commands**\n\n>>> {}".format(help_message))
+
+  if message.content.startswith('&delete'):
+    del db[message.content[8:]]
+
+    await message.channel.send(message.content[8:] + ' deleted!')
+
+  if message.content.startswith('&see'):
+
+    for key in db.keys():
+      await message.channel.send(str(key) + " : " + str(db[key]) + "\n\n")
+
+
 
 keep_alive()
 client.run(my_secret)
