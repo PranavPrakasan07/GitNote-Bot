@@ -26,7 +26,7 @@ async def on_message(message):
       now = datetime.datetime.now()
       cdate = now.strftime("%Y-%m-%d %H:%M:%S")
 
-      d =  { cdate : ['Created']}
+      d =  { cdate : ['Repository Created!']}
       db[repo_name] = d
 
       await message.channel.send("Your repository has been successfully added! Check out other commands to get updates regarding project status!")
@@ -42,8 +42,10 @@ async def on_message(message):
     if len(keys) == 0:
       await message.channel.send("No Repositories added yet!")
     else:
+      i = 1
       for key in keys:
-        list_of_repos += key + '\n\n'
+        list_of_repos += str(i) + ". " + key + '\n\n'
+        i+=1
       
       await message.channel.send("\n\n**Repositories**" + "\n >>> " + list_of_repos)
 
@@ -64,10 +66,15 @@ async def on_message(message):
       details = ''
 
       for date_time in keys:
-        details += str(date_time) + " : " 
+        details += str(date_time) + " (UTC) \n" 
         
+        i = 0
         for mess in d[date_time]:
-          details += str(mess) + '\n'
+          if i == 0:
+            details +=  '```\n' + str(mess) + '\n```'
+          else:
+            details +=  '\n' + str(mess) + '\n'
+          i +=1
 
         details += "\n\n"
       
