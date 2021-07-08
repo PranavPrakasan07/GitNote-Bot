@@ -3,23 +3,45 @@ import discord
 from keep_alive import keep_alive
 from replit import db
 import datetime
+import smtplib
+import random
 
 my_secret = os.environ['TOKEN']
 
 client = discord.Client()
 
+greetings = [
+  'Bonjour ',
+  'Zdravstvuyte ',
+  'Nǐn hǎo ',
+  'Hi ',
+  'Salve ',
+  'Konnichiwa ',
+  'Guten Tag ',
+  'Goedendag ',
+  'Namaste ',
+  'God dag '
+]
+
 commands = [
-    'help', 'open', 'create', 'list', 'hello', 'view_d', 'view_s', 'see',
+    'help', 
+    'open', 
+    'create', 
+    'list', 
+    'hello', 
+    'view_d', 
+    'view_s', 
+    'see',
     'delete',
     'dm_report_s', 
-    'dm_report_d'
+    'dm_report_d',
 ]
 
 def detail_report(repo_name):
   keys = list(db.keys())
 
   if repo_name not in list(db.keys()):
-      return("Not found!")
+    return 'Repository **not** found!'
   else:
       d = db[repo_name]
       # d - {date_time string : [title, description]}
@@ -42,7 +64,7 @@ def detail_report(repo_name):
           
           details += '\n'
 
-      details += "\n**__Important__**\n\n"
+      #details += "\n**__Important__**\n\n"
 
       return("\n\n**" + repo_name + "**\n >>> " + details)
 
@@ -50,7 +72,7 @@ def short_report(repo_name):
   keys = list(db.keys())
 
   if repo_name not in list(db.keys()):
-    return 'Not found'
+    return 'Repository **not** found!'
   else:
     d = db[repo_name]
     # d - {date_time string : [title, description]}
@@ -113,8 +135,7 @@ async def on_message(message):
                 list_of_repos += str(i) + ". " + key + '\n\n'
                 i += 1
 
-            await message.channel.send("\n\n**Repositories**" + "\n >>> " +
-                                       list_of_repos)
+            await message.channel.send("\n\n**Repositories**" + "\n >>> " + list_of_repos)
 
     if message.content.startswith('&view_d'):
       repo_name = message.content[8:]
@@ -161,17 +182,17 @@ async def on_message(message):
         if (keyword[1:] not in commands):
             await message.channel.send(
                 keyword +
-                ' is not a valid command! Check &help, to view commands')
+                ' is not a valid command! Check `&help`, to view commands')
 
     if message.content.startswith('&hello'):
-        await message.channel.send('Hello!' + f"{message.author.mention}")
+        await message.channel.send(greetings[random.randint(0,9)] + f"{message.author.mention}!")
 
     if message.content.startswith('&help'):
         await message.delete()
 
-        help_message = "\n&hello - Hello\n```&hello```\n\n" + "&help - Check commands\n```&help```\n\n" + "&create - Add repository to the list\n```&create <repo-name>```\n\n" + "&list - To list all added repositories\n```&list```\n\n" + "&view_s - To view the proceedings of the project in short\n```&view_s <repo-name>```\n\n" + "&view_d - To view the proceedings of the project in detail\n```&view_d <repo-name>```\n\n"+ "&dm_report_s - To get the proceedings of the project as a private message in short\n```&dm_report_s <repo-name>```\n\n"+ "&dm_report_d - To get the proceedings of the project as a private message in detail\n```&dm_report_d <repo-name>```\n\n"
+        help_message = "\n\n&hello - Hello\n```&hello```\n\n" + "&help - Check commands\n```&help```\n\n" + "&create - Add repository to the list\n```&create <repo-name>```\n\n" + "&list - To list all added repositories\n```&list```\n\n" + "&view_s - To view the proceedings of the project in short\n```&view_s <repo-name>```\n\n" + "&view_d - To view the proceedings of the project in detail\n```&view_d <repo-name>```\n\n"+ "&dm_report_s - To get the proceedings of the project as a private message in short\n```&dm_report_s <repo-name>```\n\n"+ "&dm_report_d - To get the proceedings of the project as a private message in detail\n```&dm_report_d <repo-name>```\n\n"
 
-        embed = discord.Embed(title="\n**Commands**\n\n",
+        embed = discord.Embed(title="\n**__Commands__**",
                               description=help_message,
                               color=0xFF5733)
         embed.set_author(
@@ -207,6 +228,38 @@ async def on_message(message):
 
       await message.delete()
       await member.send(detail_report(repo_name))
+    
+    if message.content.startswith('&set_timer'):
+      repo_name = message.content[11:]
+      member = message.author
+
+      await message.delete()
+      await member.send(detail_report(repo_name))  
+
+    if message.content.startswith('&send_mail'):
+
+      username, password, receiver, repo_name = message.content[11:].split(' ')
+
+      # creates SMTP session
+      s = smtplib.SMTP('smtp.gmail.com', 587)
+
+      # start TLS for security
+      s.starttls()
+
+      # Authentication
+      # s.login("sender_email_id", "sender_email_id_password")
+      s.login(username, password)
+
+      # message to be sent
+      message = detail_report(repo_name)
+
+      # sending the mail
+      # s.sendmail("sender_email_id", "receiver_email_id", message)
+      s.sendmail(username, receiver, message)
+
+      # terminating the session
+      s.quit()
+
 
 keep_alive()
 client.run(my_secret)
