@@ -31,7 +31,6 @@ commands = [
     'hello', 
     'view_d', 
     'view_s', 
-    'see',
     'delete',
     'dm_report_s', 
     'dm_report_d',
@@ -62,7 +61,12 @@ def detail_report(repo_name):
                   details += '\n' + str(mess) + '\n'
               i += 1
           
-          details += '\n'
+          details += '\n\n'
+
+          if (len(details) > 1000):
+            mess = "\n\n**" + repo_name + "**\n >>> " + details
+            details = ''
+            return mess
 
       #details += "\n**__Important__**\n\n"
 
@@ -90,6 +94,11 @@ def short_report(repo_name):
             details += ', ' + str(d[date_time][1].rpartition(') ')[-1])
 
         details += '\n```\n\n'
+
+        if (len(details) > 1000):
+          mess = "\n\n**" + repo_name + "**\n >>> " + details
+          details = ''
+          return mess
 
     return "\n\n**" + repo_name + "**\n >>> " + details
 
@@ -132,8 +141,13 @@ async def on_message(message):
         else:
             i = 1
             for key in keys:
-                list_of_repos += str(i) + ". " + key + '\n\n'
-                i += 1
+              list_of_repos += str(i) + ". " + key + '\n\n'
+              i += 1
+
+              if(len(list_of_repos)> 1000):
+                mess = "\n\n**Repositories**" + "\n >>> " + list_of_repos
+                list_of_repos  = ''
+                await message.channel.send(mess)
 
             await message.channel.send("\n\n**Repositories**" + "\n >>> " + list_of_repos)
 
@@ -185,14 +199,15 @@ async def on_message(message):
                 ' is not a valid command! Check `&help`, to view commands')
 
     if message.content.startswith('&hello'):
-        r = random.randint(0,9)
-        print(r)
-        await message.channel.send(greetings[r][0] + f"{message.author.mention}!" + '        || ~ ' + greetings[r][1] + ' ||')
+
+      await message.delete()
+      r = random.randint(0,9)
+      await message.channel.send(greetings[r][0] + f"{message.author.mention}!" + '        || ~ ' + greetings[r][1] + ' ||')
 
     if message.content.startswith('&help'):
         await message.delete()
 
-        help_message = "\n\n&hello - Hello\n```&hello```\n\n" + "&help - Check commands\n```&help```\n\n" + "&create - Add repository to the list\n```&create <repo-name>```\n\n" + "&list - To list all added repositories\n```&list```\n\n" + "&view_s - To view the proceedings of the project in short\n```&view_s <repo-name>```\n\n" + "&view_d - To view the proceedings of the project in detail\n```&view_d <repo-name>```\n\n"+ "&dm_report_s - To get the proceedings of the project as a private message in short\n```&dm_report_s <repo-name>```\n\n"+ "&dm_report_d - To get the proceedings of the project as a private message in detail\n```&dm_report_d <repo-name>```\n\n"
+        help_message = "\n\n&hello - Hello\n```&hello```\n\n" + "&help - Check commands\n```&help```\n\n" + "&create - Add repository to the list\n```&create <repo-name>```\n\n" + "&list - To list all added repositories\n```&list```\n\n" + "&view_s - To view the proceedings of the project in short\n```&view_s <repo-name>```\n\n" + "&view_d - To view the proceedings of the project in detail\n```&view_d <repo-name>```\n\n"+ "&dm_report_s - To get the proceedings of the project as a private message in short\n```&dm_report_s <repo-name>```\n\n"+ "&dm_report_d - To get the proceedings of the project as a private message in detail\n```&dm_report_d <repo-name>```\n\n"+ "&delete - To delete the stored repository details\n```&delete <repo-name>```\n\n"
 
         embed = discord.Embed(title="\n**__Commands__**",
                               description=help_message,
@@ -210,7 +225,7 @@ async def on_message(message):
     if message.content.startswith('&delete'):
         del db[message.content[8:]]
 
-        await message.channel.send(message.content[8:] + ' deleted!')
+        await message.channel.send(message.content[8:] + ' details deleted!')
 
     if message.content.startswith('&view_s'):
       repo_name = message.content[8:]
