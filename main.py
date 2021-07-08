@@ -10,9 +10,66 @@ client = discord.Client()
 
 commands = [
     'help', 'open', 'create', 'list', 'hello', 'view_d', 'view_s', 'see',
-    'delete'
+    'delete',
+    'dm_report_s', 
+    'dm_report_d'
 ]
 
+def detail_report(repo_name):
+  keys = list(db.keys())
+
+  if repo_name not in list(db.keys()):
+      return("Not found!")
+  else:
+      d = db[repo_name]
+      # d - {date_time string : [title, description]}
+
+      keys = d.keys()
+      # values = d.values()
+
+      details = ''
+
+      for date_time in keys:
+          details += '\n' + str(date_time) + " (UTC) \n"
+
+          i = 0
+          for mess in d[date_time]:
+              if i == 0:
+                  details += '```\n' + str(mess) + '\n```'
+              else:
+                  details += '\n' + str(mess) + '\n'
+              i += 1
+          
+          details += '\n'
+
+      details += "\n**__Important__**\n\n"
+
+      return("\n\n**" + repo_name + "**\n >>> " + details)
+
+def short_report(repo_name):
+  keys = list(db.keys())
+
+  if repo_name not in list(db.keys()):
+    return 'Not found'
+  else:
+    d = db[repo_name]
+    # d - {date_time string : [title, description]}
+
+    keys = d.keys()
+    # values = d.values()
+
+    details = ''
+
+    for date_time in keys:
+        details += str(date_time) + " (UTC) \n"
+        details += '```\n' + str(d[date_time][0])
+
+        if (len(d[date_time]) > 1):
+            details += ', ' + str(d[date_time][1].rpartition(') ')[-1])
+
+        details += '\n```\n\n'
+
+    return "\n\n**" + repo_name + "**\n >>> " + details
 
 @client.event
 async def on_ready():
@@ -60,38 +117,10 @@ async def on_message(message):
                                        list_of_repos)
 
     if message.content.startswith('&view_d'):
-        keys = list(db.keys())
+      repo_name = message.content[8:]
+      response = detail_report(repo_name)
 
-        repo_name = message.content[8:]
-
-        if repo_name not in list(db.keys()):
-            await message.channel.send("Not found!")
-        else:
-            d = db[repo_name]
-            # d - {date_time string : [title, description]}
-
-            keys = d.keys()
-            # values = d.values()
-
-            details = ''
-
-            for date_time in keys:
-                details += '\n' + str(date_time) + " (UTC) \n"
-
-                i = 0
-                for mess in d[date_time]:
-                    if i == 0:
-                        details += '```\n' + str(mess) + '\n```'
-                    else:
-                        details += '\n' + str(mess) + '\n'
-                    i += 1
-                
-                details += '\n'
-
-            details += "\n**__Important__**\n\n"
-
-            await message.channel.send("\n\n**" + repo_name + "**\n >>> " +
-                                       details)
+      await message.channel.send(response)
 
     if ((str(message.author) == 'GitHub#0000')):
 
@@ -140,7 +169,7 @@ async def on_message(message):
     if message.content.startswith('&help'):
         await message.delete()
 
-        help_message = "\n&hello\n - Hello\n```&hello```\n\n" + "&help\n - Check commands\n```&help```\n\n" + "&create\n - Add repository to the list\n```&create <repo-name>```\n\n" + "&list\n - To list all added repositories\n```&list```\n\n" + "&view_s\n - To view the proceedings of the project in short\n```&view_s <repo-name>```\n\n" + "&view_d\n - To view the proceedings of the project in detail\n```&view_d <repo-name>```\n\n"
+        help_message = "\n&hello - Hello\n```&hello```\n\n" + "&help - Check commands\n```&help```\n\n" + "&create - Add repository to the list\n```&create <repo-name>```\n\n" + "&list - To list all added repositories\n```&list```\n\n" + "&view_s - To view the proceedings of the project in short\n```&view_s <repo-name>```\n\n" + "&view_d - To view the proceedings of the project in detail\n```&view_d <repo-name>```\n\n"+ "&dm_report_s - To get the proceedings of the project as a private message in short\n```&dm_report_s <repo-name>```\n\n"+ "&dm_report_d - To get the proceedings of the project as a private message in detail\n```&dm_report_d <repo-name>```\n\n"
 
         embed = discord.Embed(title="\n**Commands**\n\n",
                               description=help_message,
@@ -161,33 +190,23 @@ async def on_message(message):
         await message.channel.send(message.content[8:] + ' deleted!')
 
     if message.content.startswith('&view_s'):
-        keys = list(db.keys())
+      repo_name = message.content[8:]
+      response = short_report(repo_name)
+      await message.channel.send(response)
 
-        repo_name = message.content[8:]
+    if message.content.startswith('&dm_report_s'):
+      repo_name = message.content[13:]
+      member = message.author
 
-        if repo_name not in list(db.keys()):
-            await message.channel.send("Not found!")
-        else:
-            d = db[repo_name]
-            # d - {date_time string : [title, description]}
+      await message.delete()
+      await member.send(short_report(repo_name))
 
-            keys = d.keys()
-            # values = d.values()
+    if message.content.startswith('&dm_report_d'):
+      repo_name = message.content[13:]
+      member = message.author
 
-            details = ''
-
-            for date_time in keys:
-                details += str(date_time) + " (UTC) \n"
-                details += '```\n' + str(d[date_time][0])
-
-                if (len(d[date_time]) > 1):
-                    details += ', ' + str(d[date_time][1].rpartition(') ')[-1])
-
-                details += '\n```\n\n'
-
-            await message.channel.send("\n\n**" + repo_name + "**\n >>> " +
-                                       details)
-
+      await message.delete()
+      await member.send(detail_report(repo_name))
 
 keep_alive()
 client.run(my_secret)
