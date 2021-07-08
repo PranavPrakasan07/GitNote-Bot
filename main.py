@@ -11,16 +11,16 @@ my_secret = os.environ['TOKEN']
 client = discord.Client()
 
 greetings = [
-  'Bonjour ',
-  'Zdravstvuyte ',
-  'Nǐn hǎo ',
-  'Hi ',
-  'Salve ',
-  'Konnichiwa ',
-  'Guten Tag ',
-  'Goedendag ',
-  'Namaste ',
-  'God dag '
+  ['Bonjour ', 'French'],
+  ['Zdravstvuyte ', 'Russian'],
+  ['Nǐn hǎo ', 'Chinese'],
+  ['Hi ', 'English'],
+  ['Salve ', 'Italian'],
+  ['Konnichiwa ', 'Japanese'],
+  ['Guten Tag ', 'German'],
+  ['Goedendag ', 'Dutch'],
+  ['Namaste ', 'Hindi'],
+  ['God dag ', 'Swedish/Norwegian']
 ]
 
 commands = [
@@ -185,7 +185,9 @@ async def on_message(message):
                 ' is not a valid command! Check `&help`, to view commands')
 
     if message.content.startswith('&hello'):
-        await message.channel.send(greetings[random.randint(0,9)] + f"{message.author.mention}!")
+        r = random.randint(0,9)
+        print(r)
+        await message.channel.send(greetings[r][0] + f"{message.author.mention}!" + '        || ~ ' + greetings[r][1] + ' ||')
 
     if message.content.startswith('&help'):
         await message.delete()
