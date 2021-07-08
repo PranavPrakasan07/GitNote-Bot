@@ -223,9 +223,14 @@ async def on_message(message):
         # await message.channel.send("\n**Commands**\n\n>>> {}".format(help_message))
 
     if message.content.startswith('&delete'):
+
+      if message.content[8:] in db:
         del db[message.content[8:]]
 
         await message.channel.send(message.content[8:] + ' details deleted!')
+        
+      else:
+        await message.channel.send(message.content[8:] + ' not found!')
 
     if message.content.startswith('&view_s'):
       repo_name = message.content[8:]
