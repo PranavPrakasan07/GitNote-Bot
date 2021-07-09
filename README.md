@@ -1,7 +1,7 @@
 # GitNote-Bot
 <a href="https://discord.com/api/oauth2/authorize?client_id=860572619220713492&permissions=2684877888&scope=bot"><img src = "https://github.com/PranavPrakasan07/GitNote-Bot/blob/master/readme4.png" width = 100%></a>
 <br><br>
-**GitNote** is a Discord Bot that helps you keep track of your github projects that you currently work on. Create a *webhook (procedure given below)* to the repository in your discord server, use the `&create` command to initialize storage. Work with your teammates on combined projects, receive the status of your project with just one command.
+**GitNote** is a Discord Bot that helps you keep track of your github projects that you currently work on. Create a *webhook (procedure given below)* to the repository in your discord server, use the `&create` command to initialize storage, with a password, so that only those people who have access to the password can checkout the project proceedings. Work with your teammates on combined projects, receive the status of your project with just one command.
 
 Click on the discord icon above to connect **GitNote** with your server!
 
