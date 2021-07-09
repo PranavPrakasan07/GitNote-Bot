@@ -5,6 +5,8 @@ from replit import db
 import datetime
 import smtplib
 import random
+import hashlib
+
 
 my_secret = os.environ['TOKEN']
 
@@ -33,10 +35,17 @@ commands = [
     'view_s', 
     'delete',
     'dm_report_s', 
-    'dm_report_d',
+    'dm_report_d'
 ]
 
-def detail_report(repo_name):
+def get_hash(password):
+  
+  # encoding 'password' using encode()
+  # then sending to SHA256()
+  result = hashlib.sha256(password.encode())
+  return(result.hexdigest())
+
+def detail_report(repo_name, hash):
   keys = list(db.keys())
 
   if repo_name not in list(db.keys()):
@@ -44,6 +53,9 @@ def detail_report(repo_name):
   else:
       d = db[repo_name]
       # d - {date_time string : [title, description]}
+
+      if(hash != db[repo_name].get('Initial')[1]):
+        return "You don't have access! *(Incorrect credentials)*"
 
       keys = d.keys()
       # values = d.values()
@@ -72,13 +84,16 @@ def detail_report(repo_name):
 
       return("\n\n**" + repo_name + "**\n >>> " + details)
 
-def short_report(repo_name):
+def short_report(repo_name, hash):
   keys = list(db.keys())
 
   if repo_name not in list(db.keys()):
     return 'Repository **not** found!'
   else:
     d = db[repo_name]
+    
+    if(hash != db[repo_name].get('Initial')[1]):
+        return "You don't have access! *(Incorrect credentials)*"
     # d - {date_time string : [title, description]}
 
     keys = d.keys()
@@ -113,13 +128,16 @@ async def on_message(message):
         return
 
     if (message.content.startswith('&create')):
-        repo_name = message.content[8:]
+        repo_name, password = message.content[8:].split()
+        await message.delete()
 
         if (repo_name not in list(db.keys())):
             now = datetime.datetime.now()
             cdate = now.strftime("%Y-%m-%d %H:%M:%S")
 
-            d = {cdate: ['Repository Created!']}
+            p_hash = get_hash(password)
+
+            d = {'Initial': ['Repository Created!', p_hash]}
             db[repo_name] = d
 
             await message.channel.send(
@@ -130,6 +148,7 @@ async def on_message(message):
             await message.channel.send(
                 "Your repository has **already** been added! Check out other commands to get updates regarding project status!"
             )
+        
 
     if message.content.startswith('&list'):
         keys = list(db.keys())
@@ -152,8 +171,12 @@ async def on_message(message):
             await message.channel.send("\n\n**Repositories**" + "\n >>> " + list_of_repos)
 
     if message.content.startswith('&view_d'):
-      repo_name = message.content[8:]
-      response = detail_report(repo_name)
+      repo_name, password = message.content[8:].split()
+      await message.delete()
+      
+      hash = get_hash(password)
+      
+      response = detail_report(repo_name, hash)
 
       await message.channel.send(response)
 
@@ -207,7 +230,7 @@ async def on_message(message):
     if message.content.startswith('&help'):
         await message.delete()
 
-        help_message = "\n\n&hello - Hello\n```&hello```\n\n" + "&help - Check commands\n```&help```\n\n" + "&create - Add repository to the list\n```&create <repo-name>```\n\n" + "&list - To list all added repositories\n```&list```\n\n" + "&view_s - To view the proceedings of the project in short\n```&view_s <repo-name>```\n\n" + "&view_d - To view the proceedings of the project in detail\n```&view_d <repo-name>```\n\n"+ "&dm_report_s - To get the proceedings of the project as a private message in short\n```&dm_report_s <repo-name>```\n\n"+ "&dm_report_d - To get the proceedings of the project as a private message in detail\n```&dm_report_d <repo-name>```\n\n"+ "&delete - To delete the stored repository details\n```&delete <repo-name>```\n\n"
+        help_message = "\n\n&hello - Hello\n```&hello```\n\n" + "&help - Check commands\n```&help```\n\n" + "&create - Add repository to the list\n```&create <repo-name> <password>```\n\n" + "&list - To list all added repositories\n```&list```\n\n" + "&view_s - To view the proceedings of the project in short\n```&view_s <repo-name> <password>```\n\n" + "&view_d - To view the proceedings of the project in detail\n```&view_d <repo-name> <password>```\n\n"+ "&dm_report_s - To get the proceedings of the project as a private message in short\n```&dm_report_s <repo-name> <password>```\n\n"+ "&dm_report_d - To get the proceedings of the project as a private message in detail\n```&dm_report_d <repo-name> <password>```\n\n"+ "&delete - To delete the stored repository details\n```&delete <repo-name> <password>```\n\n"
 
         embed = discord.Embed(title="\n**__Commands__**",
                               description=help_message,
@@ -224,32 +247,71 @@ async def on_message(message):
 
     if message.content.startswith('&delete'):
 
-      if message.content[8:] in db:
-        del db[message.content[8:]]
+      repo_name, password = message.content[8:].split()
+      await message.delete()
+
+      hash = get_hash(password)
+
+      if repo_name in db:
+        if(hash == db[repo_name].get('Initial')[1]):
+          del db[repo_name]
+
+          await message.channel.send(message.content[8:] + ' details deleted!')
+        
+        else:
+          await message.channel.send("You don't have access! *(Incorrect credentials)*")
+        
+      else:
+        await message.channel.send(repo_name + ' not found!')
+
+  
+    if message.content.startswith('&remove'):
+
+      repo_name = message.content[8:]
+      await message.delete()
+
+      #hash = get_hash(password)
+
+      if repo_name in db:
+        del db[repo_name]
 
         await message.channel.send(message.content[8:] + ' details deleted!')
         
       else:
-        await message.channel.send(message.content[8:] + ' not found!')
+        await message.channel.send(repo_name + ' not found!')      
 
     if message.content.startswith('&view_s'):
-      repo_name = message.content[8:]
-      response = short_report(repo_name)
+      repo_name, password = message.content[8:].split()
+      hash = get_hash(password)
+      await message.delete()
+
+      response = short_report(repo_name, hash)
       await message.channel.send(response)
 
+    if message.content.startswith('&see'):
+      for i in db.keys():
+        member = message.author
+        await member.send(db[i])
+
+
     if message.content.startswith('&dm_report_s'):
-      repo_name = message.content[13:]
+      repo_name, password = message.content[13:].split()
+      hash = get_hash(password)
+      await message.delete()
+
+
       member = message.author
 
-      await message.delete()
-      await member.send(short_report(repo_name))
+      await member.send(short_report(repo_name, hash))
 
     if message.content.startswith('&dm_report_d'):
-      repo_name = message.content[13:]
+      repo_name, password = message.content[13:].split()
+      hash = get_hash(password)
+
       member = message.author
 
       await message.delete()
-      await member.send(detail_report(repo_name))
+      await member.send(detail_report(repo_name, hash))
     
     if message.content.startswith('&set_timer'):
       repo_name = message.content[11:]
@@ -257,6 +319,13 @@ async def on_message(message):
 
       await message.delete()
       await member.send(detail_report(repo_name))  
+
+    if message.content.startswith('&hash'):
+      password = message.content[6:]
+      member = message.author
+
+      await message.delete()
+      await member.send(get_hash(password)) 
 
     if message.content.startswith('&send_mail'):
 
