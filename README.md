@@ -29,6 +29,7 @@ Click on the discord icon above to connect **GitNote** with your server!
 > 3. Create the repository entry with the `&create <repo-name>` command
 > 4. Check `&help` to list all supported commands
 >
+> Demo Video : https://youtu.be/SUr-fZex2gI
   
 <br>
 
